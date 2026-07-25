@@ -1,0 +1,35 @@
+import { describe, it, expect } from "vitest";
+import { buildStatusJson } from "./api";
+import type { StatusView } from "./snapshot";
+import { buildRangeSnapshot, type DailyRow, type CheckRow } from "./aggregate";
+
+function makeView(): StatusView {
+  const now = 1784937600 + 12 * 3600;
+  const daily: DailyRow[] = [
+    { component: "api", day: "2026-07-25", up: 700, total: 720, degraded: 0, sum_latency_ms: 72000 },
+  ];
+  const latest = new Map<string, CheckRow>([
+    ["api", { component: "api", ts: now - 10, ok: 1, state: "up", latency_ms: 40, status_code: 200, error: null }],
+  ]);
+  return {
+    nowUnix: now,
+    ranges: {
+      "7d": buildRangeSnapshot("7d", now, daily, latest),
+      "30d": buildRangeSnapshot("30d", now, daily, latest),
+      "90d": buildRangeSnapshot("90d", now, daily, latest),
+    },
+    banner: "ok",
+    incidents: [],
+  };
+}
+
+describe("buildStatusJson", () => {
+  it("emits banner, ranges keyed 7d/30d/90d, and per-component uptime", () => {
+    const json = buildStatusJson(makeView()) as any;
+    expect(json.banner).toBe("ok");
+    expect(Object.keys(json.ranges)).toEqual(["7d", "30d", "90d"]);
+    expect(json.ranges["7d"].components[0].key).toBe("api");
+    expect(typeof json.ranges["7d"].components[0].uptimePct).toBe("number");
+    expect(json.generatedAt).toBe(1784937600 + 12 * 3600);
+  });
+});

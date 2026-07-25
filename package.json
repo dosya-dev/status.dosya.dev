@@ -1,0 +1,21 @@
+{
+  "name": "@dosya-dev/status",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply dosya-status --local",
+    "db:migrate:remote": "wrangler d1 migrations apply dosya-status --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250214.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3",
+    "wrangler": "^3.90.0"
+  }
+}

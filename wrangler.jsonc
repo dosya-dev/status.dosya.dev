@@ -1,0 +1,26 @@
+{
+  "name": "dosya-status",
+  "main": "./src/index.ts",
+  "compatibility_date": "2025-09-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "STATUS_DB",
+      "database_name": "dosya-status",
+      "database_id": "4b94850c-8cbb-4fbd-9b62-52e4cd3d8f35",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "routes": [
+    { "pattern": "status.dosya.dev/*", "zone_name": "dosya.dev" }
+  ],
+  "vars": {
+    "API_BASE": "https://api.dosya.dev",
+    "SFTP_PROBE_HOST": "sftp.dosya.dev",
+    "SFTP_PROBE_PORT": "22"
+  }
+}
