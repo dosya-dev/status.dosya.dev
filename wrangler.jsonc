@@ -1,5 +1,5 @@
 {
-  "name": "dosya-status",
+  "name": "statusdosyadev",
   "main": "./src/index.ts",
   "compatibility_date": "2025-09-06",
   "compatibility_flags": ["nodejs_compat"],
@@ -19,8 +19,11 @@
     { "pattern": "status.dosya.dev/*", "zone_name": "dosya.dev" }
   ],
   "vars": {
-    "API_BASE": "https://api.dosya.dev",
-    "SFTP_PROBE_HOST": "sftp.dosya.dev",
-    "SFTP_PROBE_PORT": "22"
+    "API_BASE": "https://api.dosya.dev"
   }
+  // SFTP_PROBE_HOST / SFTP_PROBE_PORT are set as Worker *secrets* (not vars) so the
+  // SFTP origin address stays out of this public repo. The probe must reach the SFTP
+  // origin directly: a Worker cannot open a raw TCP socket to a Cloudflare-proxied
+  // hostname (e.g. sftp.dosya.dev) — it fails instantly with "Stream was cancelled".
+  // If the secrets are unset, the code falls back to sftp.dosya.dev:22.
 }
