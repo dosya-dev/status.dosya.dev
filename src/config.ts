@@ -21,7 +21,9 @@ export interface Env {
   SFTP_PROBE_PORT?: string;
 }
 
-export const PROBE_TIMEOUT_MS = 5000;
+// 10s so a cold-starting worker (e.g. api /health touching D1 + R2, ~5s cold)
+// isn't recorded as downtime; probes still run in parallel so the cron stays fast.
+export const PROBE_TIMEOUT_MS = 10000;
 export const AUTO_INCIDENT_FAIL_THRESHOLD = 2;
 export const RAW_RETENTION_DAYS = 8;
 export const DAILY_RETENTION_DAYS = 120;
