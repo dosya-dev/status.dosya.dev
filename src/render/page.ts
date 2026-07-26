@@ -12,7 +12,7 @@ const RANGE_LABEL: Record<RangeKey, string> = {
   "30d": "30 days",
   "90d": "90 days",
 };
-const DEFAULT_RANGE: RangeKey = "24h";
+const DEFAULT_RANGE: RangeKey = "60m";
 
 const PRODUCT_URL = "https://dosya.dev";
 const SUPPORT_URL = "https://dosya.dev/help";

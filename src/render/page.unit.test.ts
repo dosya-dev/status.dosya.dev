@@ -56,9 +56,9 @@ describe("renderPage", () => {
     expect(html).toContain(`<time class="ts" data-ts="${1784937600 + 12 * 3600}">`);
   });
 
-  it("defaults to the 24h view being active", () => {
+  it("defaults to the 60m view being active", () => {
     const html = renderPage(makeView());
-    expect(html).toContain('class="rangeview active" data-range="24h"');
+    expect(html).toContain('class="rangeview active" data-range="60m"');
     // the 90d view exists but is not the active one
     expect(html).toContain('data-range="90d"');
     expect(html).not.toContain('class="rangeview active" data-range="90d"');
