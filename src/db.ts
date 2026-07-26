@@ -66,6 +66,16 @@ export async function getDailyWindow(env: Env, sinceDay: string): Promise<DailyR
   return results ?? [];
 }
 
+/** All raw checks at or after `sinceUnix`, oldest first (powers 60m/24h interval views). */
+export async function getChecksSince(env: Env, sinceUnix: number): Promise<CheckRow[]> {
+  const { results } = await env.STATUS_DB.prepare(
+    "SELECT component, ts, ok, state, latency_ms, status_code, error FROM checks WHERE ts >= ? ORDER BY ts ASC",
+  )
+    .bind(sinceUnix)
+    .all<CheckRow>();
+  return results ?? [];
+}
+
 export async function getRecentStates(env: Env, component: string, limit: number): Promise<string[]> {
   const { results } = await env.STATUS_DB.prepare(
     "SELECT state FROM checks WHERE component = ? ORDER BY ts DESC LIMIT ?",

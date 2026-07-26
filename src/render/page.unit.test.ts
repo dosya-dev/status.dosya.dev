@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderPage } from "./page";
 import type { StatusView } from "../snapshot";
-import { buildRangeSnapshot, type DailyRow, type CheckRow } from "../aggregate";
+import { buildRangeSnapshot, buildIntervalSnapshot, type DailyRow, type CheckRow } from "../aggregate";
 
 function makeView(banner: StatusView["banner"] = "ok"): StatusView {
   const now = 1784937600 + 12 * 3600;
@@ -14,6 +14,8 @@ function makeView(banner: StatusView["banner"] = "ok"): StatusView {
   return {
     nowUnix: now,
     ranges: {
+      "60m": buildIntervalSnapshot("60m", now, [], latest),
+      "24h": buildIntervalSnapshot("24h", now, [], latest),
       "7d": buildRangeSnapshot("7d", now, daily, latest),
       "30d": buildRangeSnapshot("30d", now, daily, latest),
       "90d": buildRangeSnapshot("90d", now, daily, latest),
@@ -24,16 +26,26 @@ function makeView(banner: StatusView["banner"] = "ok"): StatusView {
 }
 
 describe("renderPage", () => {
-  it("renders a full HTML doc with all 5 component labels and 3 range views", () => {
+  it("renders a full HTML doc with all 5 component labels and all 5 range views", () => {
     const html = renderPage(makeView());
     expect(html).toContain("<!doctype html>");
     for (const label of ["API", "REST API", "WebDAV", "S3 API", "SFTP"]) {
       expect(html).toContain(label);
     }
-    expect(html).toContain('data-range="7d"');
-    expect(html).toContain('data-range="30d"');
-    expect(html).toContain('data-range="90d"');
+    for (const r of ["60m", "24h", "7d", "30d", "90d"]) {
+      expect(html).toContain(`data-range="${r}"`);
+    }
+    expect(html).toContain("60 min");
+    expect(html).toContain("24 hours");
     expect(html).toContain("All systems operational");
+  });
+
+  it("defaults to the 24h view being active", () => {
+    const html = renderPage(makeView());
+    expect(html).toContain('class="rangeview active" data-range="24h"');
+    // the 90d view exists but is not the active one
+    expect(html).toContain('data-range="90d"');
+    expect(html).not.toContain('class="rangeview active" data-range="90d"');
   });
   it("reflects the banner level in the banner class and text", () => {
     const html = renderPage(makeView("major"));

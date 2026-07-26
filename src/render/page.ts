@@ -4,8 +4,15 @@ import { BANNER_TEXT } from "../aggregate";
 import { STYLES } from "./styles";
 import type { RangeKey } from "../time";
 
-const RANGES: RangeKey[] = ["7d", "30d", "90d"];
-const RANGE_LABEL: Record<RangeKey, string> = { "7d": "7 days", "30d": "30 days", "90d": "90 days" };
+const RANGES: RangeKey[] = ["60m", "24h", "7d", "30d", "90d"];
+const RANGE_LABEL: Record<RangeKey, string> = {
+  "60m": "60 min",
+  "24h": "24 hours",
+  "7d": "7 days",
+  "30d": "30 days",
+  "90d": "90 days",
+};
+const DEFAULT_RANGE: RangeKey = "24h";
 
 export function esc(s: string): string {
   return s
@@ -73,9 +80,9 @@ export function renderPage(view: StatusView): string {
   const banner: BannerLevel = view.banner;
   const generated = new Date(view.nowUnix * 1000).toISOString().replace("T", " ").slice(0, 16) + " UTC";
   const tabs = RANGES.map(
-    (r) => `<button data-r="${r}" class="${r === "90d" ? "active" : ""}">${RANGE_LABEL[r]}</button>`,
+    (r) => `<button data-r="${r}" class="${r === DEFAULT_RANGE ? "active" : ""}">${RANGE_LABEL[r]}</button>`,
   ).join("");
-  const rangeViews = RANGES.map((r) => renderRange(view.ranges[r], r === "90d")).join("");
+  const rangeViews = RANGES.map((r) => renderRange(view.ranges[r], r === DEFAULT_RANGE)).join("");
   return `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

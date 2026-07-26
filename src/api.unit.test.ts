@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildStatusJson } from "./api";
 import type { StatusView } from "./snapshot";
-import { buildRangeSnapshot, type DailyRow, type CheckRow } from "./aggregate";
+import { buildRangeSnapshot, buildIntervalSnapshot, type DailyRow, type CheckRow } from "./aggregate";
 
 function makeView(): StatusView {
   const now = 1784937600 + 12 * 3600;
@@ -14,6 +14,8 @@ function makeView(): StatusView {
   return {
     nowUnix: now,
     ranges: {
+      "60m": buildIntervalSnapshot("60m", now, [], latest),
+      "24h": buildIntervalSnapshot("24h", now, [], latest),
       "7d": buildRangeSnapshot("7d", now, daily, latest),
       "30d": buildRangeSnapshot("30d", now, daily, latest),
       "90d": buildRangeSnapshot("90d", now, daily, latest),
@@ -24,10 +26,10 @@ function makeView(): StatusView {
 }
 
 describe("buildStatusJson", () => {
-  it("emits banner, ranges keyed 7d/30d/90d, and per-component uptime", () => {
+  it("emits banner, ranges keyed 60m/24h/7d/30d/90d, and per-component uptime", () => {
     const json = buildStatusJson(makeView()) as any;
     expect(json.banner).toBe("ok");
-    expect(Object.keys(json.ranges)).toEqual(["7d", "30d", "90d"]);
+    expect(Object.keys(json.ranges)).toEqual(["60m", "24h", "7d", "30d", "90d"]);
     expect(json.ranges["7d"].components[0].key).toBe("api");
     expect(typeof json.ranges["7d"].components[0].uptimePct).toBe("number");
     expect(json.generatedAt).toBe(1784937600 + 12 * 3600);
