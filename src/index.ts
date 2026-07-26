@@ -8,6 +8,7 @@ import { buildStatusJson } from "./api";
 import { checkAdminToken } from "./auth";
 import { renderAdmin } from "./render/admin";
 import { createIncident, addIncidentUpdate, setIncidentStatus } from "./db";
+import { FAVICON_SVG, faviconIcoBytes } from "./favicon";
 
 export default {
   async scheduled(_event: ScheduledController, env: Env, _ctx: ExecutionContext): Promise<void> {
@@ -24,6 +25,24 @@ export default {
 
     if (url.pathname === "/health") {
       return new Response("ok", { status: 200, headers: { "content-type": "text/plain" } });
+    }
+
+    // ---- Favicon (same icon as app.dosya.dev) ----
+    if (url.pathname === "/favicon.svg") {
+      return new Response(FAVICON_SVG, {
+        headers: {
+          "content-type": "image/svg+xml",
+          "cache-control": "public, max-age=86400",
+        },
+      });
+    }
+    if (url.pathname === "/favicon.ico") {
+      return new Response(faviconIcoBytes(), {
+        headers: {
+          "content-type": "image/x-icon",
+          "cache-control": "public, max-age=86400",
+        },
+      });
     }
 
     if (url.pathname === "/api/status") {

@@ -29,6 +29,8 @@ describe("renderPage", () => {
   it("renders a full HTML doc with all 5 component labels and all 5 range views", () => {
     const html = renderPage(makeView());
     expect(html).toContain("<!doctype html>");
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/favicon.svg" />');
+    expect(html).toContain('href="/favicon.ico"');
     for (const label of ["API", "REST API", "WebDAV", "S3 API", "SFTP"]) {
       expect(html).toContain(label);
     }

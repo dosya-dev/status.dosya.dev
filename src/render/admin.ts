@@ -6,6 +6,7 @@ export function renderAdmin(): string {
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <title>status admin</title>
 <style>${STYLES}
 .wrap{max-width:640px} label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
