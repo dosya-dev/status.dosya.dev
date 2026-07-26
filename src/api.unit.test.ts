@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildStatusJson } from "./api";
+import { buildStatusJson, buildUptimeJson, UPTIME_SLA_TARGET } from "./api";
 import type { StatusView } from "./snapshot";
 import { buildRangeSnapshot, buildIntervalSnapshot, type DailyRow, type CheckRow } from "./aggregate";
 
@@ -30,8 +30,19 @@ describe("buildStatusJson", () => {
     const json = buildStatusJson(makeView()) as any;
     expect(json.banner).toBe("ok");
     expect(Object.keys(json.ranges)).toEqual(["60m", "24h", "7d", "30d", "90d"]);
-    expect(json.ranges["7d"].components[0].key).toBe("api");
-    expect(typeof json.ranges["7d"].components[0].uptimePct).toBe("number");
+    expect(json.ranges["7d"].components[0].key).toBe("web");
+    expect(json.generatedAt).toBe(1784937600 + 12 * 3600);
+  });
+});
+
+describe("buildUptimeJson", () => {
+  it("emits the SLA target, measured avg uptime, and a status URL", () => {
+    const json = buildUptimeJson(makeView(), "https://status.dosya.dev") as any;
+    expect(json.slaTarget).toBe(UPTIME_SLA_TARGET);
+    expect(json.windowDays).toBe(90);
+    expect(json.statusUrl).toBe("https://status.dosya.dev");
+    // only the api component has data (700/720) → overall 90d avg = that ratio
+    expect(json.avgUptimePct).toBeCloseTo((700 / 720) * 100, 2);
     expect(json.generatedAt).toBe(1784937600 + 12 * 3600);
   });
 });

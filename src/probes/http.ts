@@ -18,6 +18,9 @@ export function interpretHttp(
 ): ProbeState {
   if (status === null) return "down";
   switch (key) {
+    case "web":
+      // Dashboard login page (SPA index) loads: any 2xx/3xx is healthy.
+      return status >= 200 && status < 400 ? "up" : "down";
     case "api":
       if (status === 200 && apiHealthOk === true) return "up";
       if (status === 503) return "degraded";

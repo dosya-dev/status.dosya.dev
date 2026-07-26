@@ -4,10 +4,11 @@ import { insertChecks, upsertDaily, pruneOld } from "./db";
 import { processIncidents } from "./incidents";
 import { loadStatusView } from "./snapshot";
 import { renderPage } from "./render/page";
-import { buildStatusJson } from "./api";
+import { buildStatusJson, buildUptimeJson } from "./api";
+import { buildRss } from "./rss";
 import { checkAdminToken } from "./auth";
 import { renderAdmin } from "./render/admin";
-import { createIncident, addIncidentUpdate, setIncidentStatus } from "./db";
+import { createIncident, addIncidentUpdate, setIncidentStatus, listIncidents } from "./db";
 import { FAVICON_SVG, faviconIcoBytes } from "./favicon";
 
 export default {
@@ -49,6 +50,27 @@ export default {
       const view = await loadStatusView(env, Math.floor(Date.now() / 1000));
       return Response.json(buildStatusJson(view), {
         headers: { "cache-control": "public, max-age=30", "access-control-allow-origin": "*" },
+      });
+    }
+
+    // Compact uptime summary for the marketing landing page (cross-origin).
+    if (url.pathname === "/api/uptime") {
+      const view = await loadStatusView(env, Math.floor(Date.now() / 1000));
+      return Response.json(buildUptimeJson(view, url.origin), {
+        headers: { "cache-control": "public, max-age=300", "access-control-allow-origin": "*" },
+      });
+    }
+
+    // RSS feed of incidents.
+    if (url.pathname === "/rss.xml" || url.pathname === "/feed.xml") {
+      const now = Math.floor(Date.now() / 1000);
+      const incidents = await listIncidents(env, now - 90 * 86400);
+      return new Response(buildRss(incidents, now, url.origin), {
+        headers: {
+          "content-type": "application/rss+xml; charset=utf-8",
+          "cache-control": "public, max-age=300",
+          "access-control-allow-origin": "*",
+        },
       });
     }
 

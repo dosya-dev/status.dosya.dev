@@ -26,12 +26,12 @@ function makeView(banner: StatusView["banner"] = "ok"): StatusView {
 }
 
 describe("renderPage", () => {
-  it("renders a full HTML doc with all 5 component labels and all 5 range views", () => {
+  it("renders a full HTML doc with all 6 component labels and all 5 range views", () => {
     const html = renderPage(makeView());
     expect(html).toContain("<!doctype html>");
     expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/favicon.svg" />');
     expect(html).toContain('href="/favicon.ico"');
-    for (const label of ["API", "REST API", "WebDAV", "S3 API", "SFTP"]) {
+    for (const label of ["Web App", "API", "REST API", "WebDAV", "S3 API", "SFTP"]) {
       expect(html).toContain(label);
     }
     for (const r of ["60m", "24h", "7d", "30d", "90d"]) {
@@ -40,6 +40,20 @@ describe("renderPage", () => {
     expect(html).toContain("60 min");
     expect(html).toContain("24 hours");
     expect(html).toContain("All systems operational");
+  });
+
+  it("includes theme + timezone toggles, RSS/fonts, and product/support links", () => {
+    const html = renderPage(makeView());
+    expect(html).toContain('id="theme-toggle"');
+    expect(html).toContain('id="tz-toggle"');
+    expect(html).toContain('rel="alternate" type="application/rss+xml"');
+    expect(html).toContain("fonts.googleapis.com");
+    expect(html).toContain("Space+Grotesk");
+    expect(html).toContain('href="https://dosya.dev"');
+    expect(html).toContain('href="https://dosya.dev/help"');
+    expect(html).toContain('href="/rss.xml"');
+    // updated timestamp is a re-formattable <time> carrying unix seconds
+    expect(html).toContain(`<time class="ts" data-ts="${1784937600 + 12 * 3600}">`);
   });
 
   it("defaults to the 24h view being active", () => {
