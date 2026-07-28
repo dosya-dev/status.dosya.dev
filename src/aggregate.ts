@@ -51,7 +51,11 @@ export type BarColor = "up" | "warn" | "down" | "none";
 export interface DayBar {
   day: string;
   uptimePct: number | null;
-  color: BarColor;
+  color: BarColor; // kept for /api/status compatibility + "none" detection
+  up: number;
+  degraded: number;
+  down: number;
+  total: number;
 }
 
 export interface ComponentSnapshot {
@@ -98,6 +102,32 @@ export function bucketColor(up: number, degraded: number, down: number, total: n
   return "up";
 }
 
+/**
+ * Proportional segment heights (percent, bottom→top: up/degraded/down) for a
+ * stacked bar. Any non-zero segment renders at ≥ MIN_SEGMENT_PCT so a 1-of-60
+ * blip stays visible; the largest segment absorbs the difference so heights
+ * always sum to exactly 100. All zeros when the bucket has no checks.
+ */
+export interface BarSegments {
+  upPct: number;
+  degradedPct: number;
+  downPct: number;
+}
+
+const MIN_SEGMENT_PCT = 8;
+
+export function barSegments(up: number, degraded: number, down: number, total: number): BarSegments {
+  if (total <= 0) return { upPct: 0, degradedPct: 0, downPct: 0 };
+  const counts = [up, degraded, down];
+  const pcts = counts.map((n) => (n > 0 ? Math.max((n / total) * 100, MIN_SEGMENT_PCT) : 0));
+  const excess = pcts[0] + pcts[1] + pcts[2] - 100;
+  if (excess > 0) {
+    const largest = pcts.indexOf(Math.max(...pcts));
+    pcts[largest] -= excess;
+  }
+  return { upPct: pcts[0], degradedPct: pcts[1], downPct: pcts[2] };
+}
+
 export function currentState(latest: CheckRow | undefined, nowUnix: number): ProbeState | "unknown" {
   if (!latest || nowUnix - latest.ts > STALE_CHECK_SECONDS) return "unknown";
   return latest.state as ProbeState;
@@ -121,11 +151,21 @@ export function buildRangeSnapshot(
     let total = 0;
     const bars: DayBar[] = days.map((day) => {
       const row = index.get(`${key}:${day}`);
-      if (!row || row.total === 0) return { day, uptimePct: null, color: "none" };
+      if (!row || row.total === 0) {
+        return { day, uptimePct: null, color: "none", up: 0, degraded: 0, down: 0, total: 0 };
+      }
       up += row.up;
       total += row.total;
       const pct = (row.up / row.total) * 100;
-      return { day, uptimePct: pct, color: barColor(pct) };
+      return {
+        day,
+        uptimePct: pct,
+        color: barColor(pct),
+        up: row.up,
+        degraded: row.degraded,
+        down: row.total - row.up - row.degraded,
+        total: row.total,
+      };
     });
     overallUp += up;
     overallTotal += total;
@@ -197,6 +237,10 @@ export function buildIntervalSnapshot(
         day: spec.label(start),
         uptimePct: bTotal === 0 ? null : (bUp / bTotal) * 100,
         color: bucketColor(bUp, bDeg, bDown, bTotal),
+        up: bUp,
+        degraded: bDeg,
+        down: bDown,
+        total: bTotal,
       };
     });
     overallUp += up;

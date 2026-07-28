@@ -67,6 +67,7 @@ header .sub { color: var(--muted); font-size: 13px; }
 .bars { display: flex; gap: 2px; margin-top: 12px; }
 .bars .b { flex: 1 1 0; height: 30px; border-radius: 2px; background: var(--none); }
 .bars .b.up { background: var(--up); } .bars .b.warn { background: var(--warn); } .bars .b.down { background: var(--down); }
+.bars .b:hover, .bars .b.pinned { outline: 1px solid var(--text); outline-offset: 1px; filter: brightness(1.12); }
 .range-note { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 6px; font-family: var(--font-mono); }
 .rangeview { display: none; } .rangeview.active { display: block; }
 .incidents { margin-top: 36px; }
@@ -79,4 +80,9 @@ footer { margin-top: 48px; color: var(--muted); font-size: 12px; text-align: cen
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 time.ts { font-variant-numeric: tabular-nums; }
+#bar-pop { position: fixed; z-index: 10; background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+  font-size: 12px; font-family: var(--font-mono); white-space: nowrap;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); pointer-events: none; }
+#bar-pop[hidden] { display: none; }
 `;

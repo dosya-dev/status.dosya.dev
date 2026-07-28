@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   barColor,
+  barSegments,
   bucketColor,
   currentState,
   buildRangeSnapshot,
@@ -60,6 +61,17 @@ describe("buildRangeSnapshot", () => {
     expect(snap.components.map((c) => c.key)).toEqual(["web", "api", "rest", "webdav", "s3", "sftp"]);
     expect(snap.components.find((c) => c.key === "sftp")!.uptimePct).toBeNull();
   });
+
+  it("exposes raw counts on daily bars, deriving down from the rollup", () => {
+    const daily: DailyRow[] = [
+      { component: "api", day: "2026-07-25", up: 700, total: 720, degraded: 5, sum_latency_ms: 72000 },
+    ];
+    const snap = buildRangeSnapshot("7d", now, daily, new Map());
+    const api = snap.components.find((c) => c.key === "api")!;
+    expect(api.bars[6]).toMatchObject({ up: 700, degraded: 5, down: 15, total: 720 });
+    // day with no rollup row → zero counts
+    expect(api.bars[0]).toMatchObject({ up: 0, degraded: 0, down: 0, total: 0, color: "none" });
+  });
 });
 
 describe("bucketColor", () => {
@@ -114,6 +126,50 @@ describe("buildIntervalSnapshot", () => {
     expect(nonEmpty).toHaveLength(1);
     expect(nonEmpty[0].color).toBe("warn"); // a degraded sample in the hour
     expect(s3.uptimePct).toBeCloseTo((2 / 3) * 100, 5);
+  });
+
+  it("exposes raw counts on interval bars", () => {
+    const checks = [
+      chk("api", now - 30, "up"),
+      chk("api", now - 90, "down"),
+      chk("api", now - 150, "up"),
+    ];
+    const snap = buildIntervalSnapshot("24h", now, checks, new Map());
+    const api = snap.components.find((c) => c.key === "api")!;
+    const lastBar = api.bars[api.bars.length - 1];
+    expect(lastBar).toMatchObject({ up: 2, degraded: 0, down: 1, total: 3 });
+  });
+});
+
+describe("barSegments", () => {
+  it("returns zeros for an empty bucket", () => {
+    expect(barSegments(0, 0, 0, 0)).toEqual({ upPct: 0, degradedPct: 0, downPct: 0 });
+  });
+  it("gives a pure bucket 100% of its single state", () => {
+    expect(barSegments(60, 0, 0, 60)).toEqual({ upPct: 100, degradedPct: 0, downPct: 0 });
+    expect(barSegments(0, 60, 0, 60)).toEqual({ upPct: 0, degradedPct: 100, downPct: 0 });
+    expect(barSegments(0, 0, 60, 60)).toEqual({ upPct: 0, degradedPct: 0, downPct: 100 });
+  });
+  it("splits proportionally when every non-zero segment is above the floor", () => {
+    expect(barSegments(39, 0, 26, 65)).toEqual({ upPct: 60, degradedPct: 0, downPct: 40 });
+    expect(barSegments(30, 15, 15, 60)).toEqual({ upPct: 50, degradedPct: 25, downPct: 25 });
+  });
+  it("floors a tiny down segment at 8% and takes the excess from the largest", () => {
+    const s = barSegments(59, 0, 1, 60);
+    expect(s.downPct).toBe(8);
+    expect(s.upPct).toBe(92);
+    expect(s.upPct + s.degradedPct + s.downPct).toBe(100);
+  });
+  it("floors a tiny up segment too (floor is symmetric)", () => {
+    const s = barSegments(1, 0, 59, 60);
+    expect(s.upPct).toBe(8);
+    expect(s.downPct).toBe(92);
+  });
+  it("floors two tiny segments at once, largest absorbs both", () => {
+    const s = barSegments(1, 1, 58, 60);
+    expect(s.upPct).toBe(8);
+    expect(s.degradedPct).toBe(8);
+    expect(s.downPct).toBe(84);
   });
 });
 

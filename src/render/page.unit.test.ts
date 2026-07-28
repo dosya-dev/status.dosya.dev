@@ -76,3 +76,62 @@ describe("renderPage", () => {
     expect(html).toContain("&lt;script&gt;");
   });
 });
+
+describe("stacked bars", () => {
+  const now = 1784937600 + 14 * 3600 + 30 * 60; // 14:30Z — checks land in the 14:00 bucket
+  function chk(ts: number, state: string): CheckRow {
+    return { component: "api", ts, ok: state === "up" ? 1 : 0, state, latency_ms: 50, status_code: 200, error: null };
+  }
+  function htmlWith(checks: CheckRow[]): string {
+    const view = makeView();
+    view.ranges["24h"] = buildIntervalSnapshot("24h", now, checks, new Map());
+    return renderPage(view);
+  }
+
+  it("renders a mixed bucket as a hard-stop gradient with data attributes", () => {
+    const html = htmlWith([chk(now - 30, "up"), chk(now - 90, "up"), chk(now - 150, "up"), chk(now - 210, "down"), chk(now - 270, "down")]);
+    expect(html).toContain("background:linear-gradient(to top, var(--up) 0% 60%, var(--down) 60% 100%)");
+    expect(html).toContain('data-label="14:00"');
+    expect(html).toContain('data-up="3"');
+    expect(html).toContain('data-down="2"');
+    expect(html).toContain('data-total="5"');
+    expect(html).toContain('data-pct="60.00%"');
+    expect(html).toContain("14:00 — 60.00% success · 3/5 up, 2 down");
+  });
+
+  it("renders a degraded middle band between up and down", () => {
+    const html = htmlWith([chk(now - 30, "up"), chk(now - 90, "up"), chk(now - 150, "degraded"), chk(now - 210, "down")]);
+    expect(html).toContain("background:linear-gradient(to top, var(--up) 0% 50%, var(--warn) 50% 75%, var(--down) 75% 100%)");
+    expect(html).toContain("14:00 — 50.00% success · 2/4 up, 1 degraded, 1 down");
+  });
+
+  it("keeps pure buckets as solid class-based bars (no inline style)", () => {
+    const html = htmlWith([chk(now - 30, "up"), chk(now - 90, "up")]);
+    expect(html).toContain('<div class="b up" data-label="14:00"');
+    expect(html).not.toContain('class="b mix" data-label="14:00"');
+  });
+
+  it("applies the 8% visibility floor to blip segments", () => {
+    const checks: CheckRow[] = [];
+    for (let i = 0; i < 59; i++) checks.push(chk(now - 30 - i, "up"));
+    checks.push(chk(now - 300, "down"));
+    const html = htmlWith(checks);
+    expect(html).toContain("background:linear-gradient(to top, var(--up) 0% 92%, var(--down) 92% 100%)");
+  });
+
+  it("renders no-data buckets as plain gray bars without data attributes", () => {
+    const html = htmlWith([]);
+    expect(html).toContain('<div class="b"></div>');
+  });
+});
+
+describe("bar popover", () => {
+  it("ships the shared popover shell and client logic", () => {
+    const html = renderPage(makeView());
+    expect(html).toContain('<div id="bar-pop" hidden></div>');
+    expect(html).toContain("#bar-pop"); // styles
+    expect(html).toContain("data-total]"); // JS selector for bars
+    expect(html).toContain("removeAttribute('title')"); // no-JS fallback strip
+  });
+});
+
