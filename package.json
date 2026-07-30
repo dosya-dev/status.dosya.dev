@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "echo \"no build step — wrangler bundles src/index.ts on deploy\"",
+    "build": "echo \"no build step - wrangler bundles src/index.ts on deploy\"",
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",

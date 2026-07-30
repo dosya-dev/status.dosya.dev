@@ -24,6 +24,6 @@
   // SFTP_PROBE_HOST / SFTP_PROBE_PORT are set as Worker *secrets* (not vars) so the
   // SFTP origin address stays out of this public repo. The probe must reach the SFTP
   // origin directly: a Worker cannot open a raw TCP socket to a Cloudflare-proxied
-  // hostname (e.g. sftp.dosya.dev) — it fails instantly with "Stream was cancelled".
+  // hostname (e.g. sftp.dosya.dev) - it fails instantly with "Stream was cancelled".
   // If the secrets are unset, the code falls back to sftp.dosya.dev:22.
 }

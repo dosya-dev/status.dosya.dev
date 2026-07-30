@@ -11,7 +11,7 @@ function probeOnce(c: ComponentDef): Promise<ProbeResult> {
 }
 
 /**
- * Probe all components in parallel. Never rejects — failures become down results.
+ * Probe all components in parallel. Never rejects - failures become down results.
  * A "down" result is re-probed once and the retry wins, so a single transient
  * blip (network hiccup, one slow dependency) doesn't get recorded as downtime;
  * a real outage still fails the retry and records down within the same run.

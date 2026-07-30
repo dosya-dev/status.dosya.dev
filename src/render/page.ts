@@ -26,10 +26,10 @@ export function esc(s: string): string {
 }
 
 function fmtPct(pct: number | null): string {
-  return pct === null ? "—" : `${pct.toFixed(2)}%`;
+  return pct === null ? "-" : `${pct.toFixed(2)}%`;
 }
 
-/** UTC 'YYYY-MM-DD HH:MM UTC' — the no-JS default; the client rewrites to local on toggle. */
+/** UTC 'YYYY-MM-DD HH:MM UTC' - the no-JS default; the client rewrites to local on toggle. */
 function utcText(unix: number): string {
   const d = new Date(unix * 1000);
   const p = (n: number) => String(n).padStart(2, "0");
@@ -55,13 +55,13 @@ function barCountsText(b: DayBar): string {
 
 /**
  * One bar: solid class-based background when the bucket is a single state
- * (the common case — zero extra bytes), a hard-stop gradient stacked
+ * (the common case - zero extra bytes), a hard-stop gradient stacked
  * bottom→top green/orange/red when mixed. The title is a no-JS fallback;
  * the client script strips it and serves the same text via the popover.
  */
 function barHtml(b: DayBar): string {
   if (b.total === 0) return `<div class="b"></div>`;
-  const text = `${b.day} — ${fmtPct(b.uptimePct)} success · ${barCountsText(b)}`;
+  const text = `${b.day} - ${fmtPct(b.uptimePct)} success · ${barCountsText(b)}`;
   const data =
     `data-label="${esc(b.day)}" data-up="${b.up}" data-degraded="${b.degraded}" ` +
     `data-down="${b.down}" data-total="${b.total}" data-pct="${fmtPct(b.uptimePct)}"`;
@@ -175,7 +175,7 @@ const CLIENT_SCRIPT = `
     var parts = [b.getAttribute('data-up') + '/' + b.getAttribute('data-total') + ' up'];
     if (b.getAttribute('data-degraded') !== '0') parts.push(b.getAttribute('data-degraded') + ' degraded');
     if (b.getAttribute('data-down') !== '0') parts.push(b.getAttribute('data-down') + ' down');
-    return b.getAttribute('data-label') + ' — ' + b.getAttribute('data-pct') + ' success · ' + parts.join(', ');
+    return b.getAttribute('data-label') + ' - ' + b.getAttribute('data-pct') + ' success · ' + parts.join(', ');
   }
   function showPop(bar) {
     pop.textContent = popText(bar);

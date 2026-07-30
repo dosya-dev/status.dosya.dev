@@ -88,7 +88,7 @@ export default {
       }
       const now = Math.floor(Date.now() / 1000);
 
-      // POST /admin/incidents — create
+      // POST /admin/incidents - create
       if (url.pathname === "/admin/incidents" && request.method === "POST") {
         const b = (await request.json().catch(() => null)) as
           | { component?: string; kind?: string; status?: string; title?: string; body?: string | null }
@@ -108,7 +108,7 @@ export default {
         return Response.json({ id }, { status: 201 });
       }
 
-      // POST /admin/incidents/:id/updates — append an update
+      // POST /admin/incidents/:id/updates - append an update
       const updMatch = url.pathname.match(/^\/admin\/incidents\/(\d+)\/updates$/);
       if (updMatch && request.method === "POST") {
         const id = Number(updMatch[1]);
@@ -118,7 +118,7 @@ export default {
         return Response.json({ ok: true });
       }
 
-      // PATCH /admin/incidents/:id — change status (e.g. resolve)
+      // PATCH /admin/incidents/:id - change status (e.g. resolve)
       const idMatch = url.pathname.match(/^\/admin\/incidents\/(\d+)$/);
       if (idMatch && request.method === "PATCH") {
         const id = Number(idMatch[1]);

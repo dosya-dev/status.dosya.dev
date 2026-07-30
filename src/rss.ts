@@ -28,7 +28,7 @@ export function buildRss(incidents: IncidentRow[], nowUnix: number, baseUrl: str
       if (i.body) parts.push(i.body);
       return `    <item>
       <title>${escXml(`[${comp}] ${i.title}`)}</title>
-      <description>${escXml(parts.join(" — "))}</description>
+      <description>${escXml(parts.join(" - "))}</description>
       <pubDate>${rfc822(i.updated_at || i.started_at)}</pubDate>
       <guid isPermaLink="false">incident-${i.id}</guid>
       <link>${escXml(baseUrl)}/</link>
