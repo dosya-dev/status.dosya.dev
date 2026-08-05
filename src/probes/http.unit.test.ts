@@ -9,6 +9,14 @@ describe("interpretHttp", () => {
     expect(interpretHttp("web", 404, false, null)).toBe("down");
     expect(interpretHttp("web", null, false, null)).toBe("down");
   });
+  it("docs: 200 + body true => up; 200 + body false => degraded; else down", () => {
+    expect(interpretHttp("docs", 200, false, true)).toBe("up");
+    expect(interpretHttp("docs", 200, false, false)).toBe("degraded");
+    expect(interpretHttp("docs", 200, false, null)).toBe("degraded");
+    expect(interpretHttp("docs", 302, false, null)).toBe("down");
+    expect(interpretHttp("docs", 502, false, null)).toBe("down");
+    expect(interpretHttp("docs", null, false, null)).toBe("down");
+  });
   it("api: 200 + ok:true => up; 503 => degraded; else down", () => {
     expect(interpretHttp("api", 200, false, true)).toBe("up");
     expect(interpretHttp("api", 200, false, false)).toBe("down");

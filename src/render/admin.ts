@@ -24,6 +24,7 @@ button.go{margin-top:16px;background:var(--accent);color:#fff;border:0;border-ra
     <option value="global">Global (all)</option>
     <option value="api">API</option><option value="rest">REST API</option>
     <option value="webdav">WebDAV</option><option value="s3">S3 API</option><option value="sftp">SFTP</option>
+    <option value="docs">Document Editor</option>
   </select>
   <label for="kind">Kind</label>
   <select id="kind"><option value="manual">Incident</option><option value="maintenance">Maintenance</option></select>

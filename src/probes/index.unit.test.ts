@@ -64,6 +64,6 @@ describe("runAllProbes retry", () => {
   it("returns one result per component in component order", async () => {
     const prober = async (c: ComponentDef): Promise<ProbeResult> => result(c.key, "up");
     const results = await runAllProbes(env, prober);
-    expect(results.map((r) => r.component)).toEqual(["web", "api", "rest", "webdav", "s3", "sftp"]);
+    expect(results.map((r) => r.component)).toEqual(["web", "docs", "api", "rest", "webdav", "s3", "sftp"]);
   });
 });

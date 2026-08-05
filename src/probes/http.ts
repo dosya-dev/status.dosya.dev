@@ -14,15 +14,21 @@ export function interpretHttp(
   key: string,
   status: number | null,
   davHeaderPresent: boolean,
-  apiHealthOk: boolean | null,
+  healthOk: boolean | null,
 ): ProbeState {
   if (status === null) return "down";
   switch (key) {
     case "web":
       // Dashboard login page (SPA index) loads: any 2xx/3xx is healthy.
       return status >= 200 && status < 400 ? "up" : "down";
+    case "docs":
+      // ONLYOFFICE /healthcheck answers 200 with body "true"/"false"; a 200
+      // "false" means the server is reachable but reporting itself unhealthy.
+      if (status === 200 && healthOk === true) return "up";
+      if (status === 200) return "degraded";
+      return "down";
     case "api":
-      if (status === 200 && apiHealthOk === true) return "up";
+      if (status === 200 && healthOk === true) return "up";
       if (status === 503) return "degraded";
       return "down";
     case "rest":
@@ -47,17 +53,23 @@ export async function probeHttp(def: ComponentDef, timeoutMs: number): Promise<P
       redirect: "manual",
     });
     const latency = Date.now() - start;
-    let apiHealthOk: boolean | null = null;
+    let healthOk: boolean | null = null;
     if (def.key === "api") {
       try {
         const body = (await res.json()) as { ok?: boolean };
-        apiHealthOk = body?.ok === true;
+        healthOk = body?.ok === true;
       } catch {
-        apiHealthOk = null;
+        healthOk = null;
+      }
+    } else if (def.key === "docs") {
+      try {
+        healthOk = (await res.text()).trim() === "true";
+      } catch {
+        healthOk = null;
       }
     }
     const davHeaderPresent = res.headers.has("dav"); // Headers is case-insensitive
-    const state = interpretHttp(def.key, res.status, davHeaderPresent, apiHealthOk);
+    const state = interpretHttp(def.key, res.status, davHeaderPresent, healthOk);
     return {
       component: def.key,
       ok: state === "up",

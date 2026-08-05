@@ -58,7 +58,7 @@ describe("buildRangeSnapshot", () => {
     expect(api.currentState).toBe("up");
     expect(api.latencyMs).toBe(42);
     // components always present in fixed order, even with no data
-    expect(snap.components.map((c) => c.key)).toEqual(["web", "api", "rest", "webdav", "s3", "sftp"]);
+    expect(snap.components.map((c) => c.key)).toEqual(["web", "docs", "api", "rest", "webdav", "s3", "sftp"]);
     expect(snap.components.find((c) => c.key === "sftp")!.uptimePct).toBeNull();
   });
 
@@ -108,7 +108,7 @@ describe("buildIntervalSnapshot", () => {
     const colored = api.bars.filter((b) => b.color !== "none").map((b) => b.color);
     expect(colored).toEqual(["up", "down", "up"]);
     // components always present in fixed order
-    expect(snap.components.map((c) => c.key)).toEqual(["web", "api", "rest", "webdav", "s3", "sftp"]);
+    expect(snap.components.map((c) => c.key)).toEqual(["web", "docs", "api", "rest", "webdav", "s3", "sftp"]);
     expect(snap.components.find((c) => c.key === "sftp")!.uptimePct).toBeNull();
   });
 
