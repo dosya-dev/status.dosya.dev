@@ -1,0 +1,30 @@
+-- ============================================================
+-- 0002 - Index checks.ts so retention stops full-scanning the table
+--
+-- pruneOld (src/db.ts) runs on every cron tick, and the cron is "* * * * *" -
+-- once a minute, 1,440 times a day. Its first statement is:
+--
+--   DELETE FROM checks WHERE ts < ?
+--
+-- 0001's only index on `checks` is (component, ts). Its LEADING column is
+-- `component`, so it cannot serve a bare predicate on `ts`; EXPLAIN on
+-- production returned a plain `SCAN checks`. With retention at 8 days the
+-- table sits at a steady ~80,650 rows, so every run read the whole table to
+-- delete the handful of rows that had just aged out.
+--
+-- 80,654 x 1,440 = ~116 MILLION rows read per day, which made the status page
+-- the single largest D1 reader on the account - larger than the file storage
+-- product it exists to monitor. Measured 2026-08-21: 115.6M rows/24h.
+--
+-- This is a steady state, not a backlog: the table does not grow, so it would
+-- have cost that every day indefinitely.
+--
+-- The same index also serves the history reads (`WHERE ts >= ?` in
+-- getRecentChecks / the uptime window queries), which were full scans for the
+-- same reason at ~80-90k rows per call.
+--
+-- Not redundant with idx_checks_component_ts: a composite index can only be
+-- used for a leading-column predicate, and every query fixed here filters on
+-- `ts` alone. getLatestChecks, which groups by component, keeps using the
+-- composite one and is unaffected.
+CREATE INDEX IF NOT EXISTS idx_checks_ts ON checks (ts);

@@ -9,12 +9,13 @@
     "build": "echo \"no build step - wrangler bundles src/index.ts on deploy\"",
     "deploy": "wrangler deploy",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "db:migrate:local": "wrangler d1 migrations apply dosya-status --local",
     "db:migrate:remote": "wrangler d1 migrations apply dosya-status --remote"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250214.0",
+    "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "^3.2.7",
     "typescript": "^5.7.0",
     "vitest": "^3",
