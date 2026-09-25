@@ -3,34 +3,38 @@
 // (toggled by the pre-paint script + theme switcher), matching the web app.
 export const STYLES = `
 :root {
-  --bg: oklch(0.9813 0.0100 238.5069);
-  --text: oklch(0.1807 0.0207 239.8394);
-  --card: oklch(1.0000 0 0);
-  --muted: oklch(0.4501 0.0191 239.4931);
-  --border: oklch(0.8999 0.0196 240.7516);
-  --accent: oklch(0.6236 0.1833 147.4139);
-  --accent-fg: oklch(0.9813 0.0100 238.5069);
-  --up: oklch(0.6236 0.1833 147.4139);
+  --bg: #f5f5f5;
+  --text: #181818;
+  --card: #ffffff;
+  --muted: #6b6b6b;
+  --border: #e4e4e4;
+  --accent: #15803d;
+  --accent-fg: #052e16;
+  --up: #22c55e;
   --warn: oklch(0.7200 0.1500 75.0000);
-  --down: oklch(0.6207 0.2306 24.9164);
-  --none: oklch(0.9396 0.0204 243.4220);
-  --radius: 0.75rem;
+  --down: #d42121;
+  --none: #e4e4e4;
+  --radius: 0.625rem;
   --font-sans: 'Space Grotesk', 'Space Grotesk Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --accent-fill: #22c55e;
+
 }
 .dark {
-  --bg: oklch(0.1289 0.0199 238.9108);
-  --text: oklch(0.9513 0.0101 238.5127);
-  --card: oklch(0.1807 0.0207 239.8394);
-  --muted: oklch(0.6499 0.0194 240.1577);
-  --border: oklch(0.2791 0.0203 242.6079);
-  --accent: oklch(0.7007 0.1804 148.9872);
-  --accent-fg: oklch(0.1004 0.0209 233.5083);
-  --up: oklch(0.7007 0.1804 148.9872);
+  --bg: #131313;
+  --text: #ededed;
+  --card: #1d1d1d;
+  --muted: #a1a1a1;
+  --border: #272727;
+  --accent: #22c55e;
+  --accent-fg: #052e16;
+  --up: #22c55e;
   --warn: oklch(0.8000 0.1500 78.0000);
-  --down: oklch(0.6207 0.2306 24.9164);
-  --none: oklch(0.2414 0.0196 239.1401);
+  --down: #f87171;
+  --none: #272727;
   --radius: 0.625rem;
+  --accent-fill: #22c55e;
+
 }
 * { box-sizing: border-box; }
 html { color-scheme: light; }
@@ -55,7 +59,7 @@ header .sub { color: var(--muted); font-size: 13px; }
 .banner.partial, .banner.major { background: color-mix(in oklab, var(--down) 14%, var(--card)); color: var(--down); }
 .tabs { display: inline-flex; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin: 8px 0 20px; flex-wrap: wrap; }
 .tabs button { border: 0; background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font-sans); }
-.tabs button.active { background: var(--accent); color: var(--accent-fg); }
+.tabs button.active { background: var(--accent-fill); color: var(--accent-fg); }
 .comp { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; }
 .comp .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .comp .name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
