@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildStatusJson, buildUptimeJson, UPTIME_SLA_TARGET } from "./api";
+import { buildStatusJson, buildUptimeJson, UPTIME_SLA_TARGET, buildHeartbeatJson } from "./api";
 import type { StatusView } from "./snapshot";
 import { buildRangeSnapshot, buildIntervalSnapshot, type DailyRow, type CheckRow } from "./aggregate";
 
@@ -22,6 +22,8 @@ function makeView(): StatusView {
     },
     banner: "ok",
     incidents: [],
+    latency: {},
+    updates: [],
   };
 }
 
@@ -44,5 +46,29 @@ describe("buildUptimeJson", () => {
     // only the api component has data (700/720) → overall 90d avg = that ratio
     expect(json.avgUptimePct).toBeCloseTo((700 / 720) * 100, 2);
     expect(json.generatedAt).toBe(1784937600 + 12 * 3600);
+  });
+});
+
+describe("buildHeartbeatJson", () => {
+  it("reports a fresh check as ok", () => {
+    expect(buildHeartbeatJson(1_791_000_000, 1_791_000_060)).toEqual({
+      newestCheckTs: 1_791_000_000,
+      ageSeconds: 60,
+      ok: true,
+    });
+  });
+  it("reports a stale check as not ok", () => {
+    // The cron runs every minute. 15 minutes of silence means it stopped.
+    expect(buildHeartbeatJson(1_791_000_000, 1_791_000_000 + 901).ok).toBe(false);
+  });
+  it("is not ok when there are no checks at all", () => {
+    expect(buildHeartbeatJson(null, 1_791_000_000)).toEqual({
+      newestCheckTs: null,
+      ageSeconds: null,
+      ok: false,
+    });
+  });
+  it("tolerates a clock skew that puts the newest check in the future", () => {
+    expect(buildHeartbeatJson(1_791_000_060, 1_791_000_000).ok).toBe(true);
   });
 });

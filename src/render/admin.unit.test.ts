@@ -13,3 +13,9 @@ describe("renderAdmin", () => {
     expect(html).toContain("/admin/incidents");
   });
 });
+
+it("keeps the admin form a plain block layout despite sharing the page stylesheet", () => {
+  const html = renderAdmin();
+  expect(html).toContain(".wrap{max-width:640px;display:block}");
+  expect(html).toContain('id="starts"');
+});

@@ -9,7 +9,7 @@ export function renderAdmin(): string {
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <title>status admin</title>
 <style>${STYLES}
-.wrap{max-width:640px} label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.wrap{max-width:640px;display:block} label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 input,select,textarea{width:100%;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text)}
 button.go{margin-top:16px;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
 #out{margin-top:14px;font-size:13px;color:var(--muted);white-space:pre-wrap}
@@ -30,6 +30,8 @@ button.go{margin-top:16px;background:var(--accent);color:#fff;border:0;border-ra
   <select id="kind"><option value="manual">Incident</option><option value="maintenance">Maintenance</option></select>
   <label for="status">Status</label>
   <input id="status" value="investigating" placeholder="investigating | identified | monitoring | resolved | scheduled | in_progress | completed">
+  <label for="starts">Starts at (optional, your local time; leave empty for now)</label>
+  <input id="starts" type="datetime-local">
   <label for="title">Title</label>
   <input id="title" placeholder="Short summary">
   <label for="body">Body</label>
@@ -50,6 +52,8 @@ document.getElementById('create').addEventListener('click', async function(){
     title: document.getElementById('title').value,
     body: document.getElementById('body').value || null
   };
+  var starts = document.getElementById('starts').value;
+  if (starts) { var t = Date.parse(starts); if (!isNaN(t)) payload.startedAt = Math.floor(t / 1000); }
   try {
     var res = await fetch('/admin/incidents', { method:'POST',
       headers:{ 'content-type':'application/json', 'authorization':'Bearer '+tk.value },

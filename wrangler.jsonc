@@ -4,6 +4,9 @@
   "compatibility_date": "2025-09-06",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // public/ is served as static assets ahead of the fetch handler (the social
+  // preview image). Paths with no matching file still reach the Worker.
+  "assets": { "directory": "./public" },
   "triggers": {
     "crons": ["* * * * *"]
   },

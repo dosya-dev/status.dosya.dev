@@ -47,6 +47,14 @@ export interface IncidentRow {
   updated_at: number;
 }
 
+export interface IncidentUpdateRow {
+  id: number;
+  incident_id: number;
+  status: string;
+  body: string;
+  created_at: number;
+}
+
 export type BarColor = "up" | "warn" | "down" | "none";
 export interface DayBar {
   day: string;

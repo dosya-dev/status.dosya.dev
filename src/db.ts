@@ -1,7 +1,7 @@
 import type { Env } from "./config";
 import { dayKey } from "./time";
 import type { ProbeResult } from "./probes/http";
-import type { CheckRow, DailyRow, IncidentRow } from "./aggregate";
+import type { CheckRow, DailyRow, IncidentRow, IncidentUpdateRow } from "./aggregate";
 
 export async function insertChecks(env: Env, nowUnix: number, results: ProbeResult[]): Promise<void> {
   const stmt = env.STATUS_DB.prepare(
@@ -12,6 +12,24 @@ export async function insertChecks(env: Env, nowUnix: number, results: ProbeResu
       stmt.bind(r.component, nowUnix, r.ok ? 1 : 0, r.state, r.latency_ms, r.status_code, r.error),
     ),
   );
+}
+
+/** Recent latencies per component, newest first, for the latency ceilings. */
+export async function getRecentLatencies(
+  env: Env,
+  components: string[],
+  limit: number,
+): Promise<Map<string, Array<number | null>>> {
+  const out = new Map<string, Array<number | null>>();
+  for (const component of components) {
+    const { results } = await env.STATUS_DB.prepare(
+      "SELECT latency_ms FROM checks WHERE component = ? ORDER BY ts DESC LIMIT ?",
+    )
+      .bind(component, limit)
+      .all<{ latency_ms: number | null }>();
+    out.set(component, (results ?? []).map((r) => r.latency_ms));
+  }
+  return out;
 }
 
 export async function upsertDaily(env: Env, nowUnix: number, results: ProbeResult[]): Promise<void> {
@@ -118,10 +136,25 @@ export async function resolveAutoIncident(env: Env, id: number, nowUnix: number)
 /** Incidents started within the window OR still unresolved, newest first. */
 export async function listIncidents(env: Env, sinceUnix: number): Promise<IncidentRow[]> {
   const { results } = await env.STATUS_DB.prepare(
-    "SELECT * FROM incidents WHERE started_at >= ? OR status != 'resolved' ORDER BY started_at DESC",
+    "SELECT * FROM incidents WHERE started_at >= ? OR status NOT IN ('resolved', 'completed') ORDER BY started_at DESC",
   )
     .bind(sinceUnix)
     .all<IncidentRow>();
+  return results ?? [];
+}
+
+/** The update log of the given incidents, newest first. Powers the live incident card. */
+export async function listIncidentUpdates(env: Env, incidentIds: number[]): Promise<IncidentUpdateRow[]> {
+  // D1 allows 100 bound parameters per statement; the page shows a handful of
+  // live incidents at most, so cap well below that rather than fail the view.
+  const ids = incidentIds.slice(0, 50);
+  if (ids.length === 0) return [];
+  const marks = ids.map(() => "?").join(",");
+  const { results } = await env.STATUS_DB.prepare(
+    `SELECT id, incident_id, status, body, created_at FROM incident_updates WHERE incident_id IN (${marks}) ORDER BY created_at DESC`,
+  )
+    .bind(...ids)
+    .all<IncidentUpdateRow>();
   return results ?? [];
 }
 
@@ -175,4 +208,11 @@ export async function setIncidentStatus(env: Env, id: number, status: string, no
   )
     .bind(status, nowUnix, resolved ? 1 : 0, nowUnix, id)
     .run();
+}
+
+export async function getNewestCheckTs(env: Env): Promise<number | null> {
+  const row = await env.STATUS_DB.prepare("SELECT MAX(ts) AS ts FROM checks").first<{
+    ts: number | null;
+  }>();
+  return row?.ts ?? null;
 }
