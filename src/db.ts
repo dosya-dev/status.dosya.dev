@@ -63,13 +63,30 @@ export async function pruneOld(env: Env, nowUnix: number, rawDays: number, daily
   ]);
 }
 
-export async function getLatestChecks(env: Env): Promise<Map<string, CheckRow>> {
-  const { results } = await env.STATUS_DB.prepare(`
+/**
+ * Latest row per component. GROUP BY component walked the whole
+ * (component, ts) index, ~115k rows per call (9M rows read on 2026-11-03).
+ * The recursive CTE hops from one component to the next by index seek and
+ * takes each component's newest row the same way, so it reads ~2 rows per
+ * component however long the retention window is.
+ */
+export const LATEST_CHECKS_SQL = `
+    WITH RECURSIVE comps(component) AS (
+      SELECT MIN(component) FROM checks
+      UNION ALL
+      SELECT (SELECT MIN(component) FROM checks WHERE component > comps.component)
+      FROM comps WHERE comps.component IS NOT NULL
+    )
     SELECT c.component, c.ts, c.ok, c.state, c.latency_ms, c.status_code, c.error
-    FROM checks c
-    JOIN (SELECT component, MAX(ts) AS mts FROM checks GROUP BY component) m
-      ON c.component = m.component AND c.ts = m.mts
-  `).all<CheckRow>();
+    FROM comps
+    JOIN checks c ON c.id = (
+      SELECT id FROM checks WHERE component = comps.component ORDER BY ts DESC LIMIT 1
+    )
+    WHERE comps.component IS NOT NULL
+  `;
+
+export async function getLatestChecks(env: Env): Promise<Map<string, CheckRow>> {
+  const { results } = await env.STATUS_DB.prepare(LATEST_CHECKS_SQL).all<CheckRow>();
   const map = new Map<string, CheckRow>();
   for (const r of results ?? []) map.set(r.component, r);
   return map;

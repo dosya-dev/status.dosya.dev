@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RAW_RETENTION_DAYS } from "./config";
+import { LATEST_CHECKS_SQL } from "./db";
 
 /**
  * The status worker's cron is "* * * * *" - it runs 1,440 times a day, and
@@ -86,16 +87,34 @@ describe("checks retention query plans", () => {
         expect(plan).toMatch(/idx_checks_ts/);
     });
 
-    it("leaves getLatestChecks on the composite index", () => {
-        // Grouping by component is exactly what (component, ts) is for; the new
-        // index must not pull that query off it.
+    it("finds the latest check per component by seeks, never a scan of checks", () => {
+        // The old GROUP BY form used the composite index but walked all of it
+        // (~115k rows per call). Every access to checks must be a SEARCH.
         const s = migratedDb();
         seed(s, NOW);
-        const plan = planOf(s, `
-            SELECT c.component, c.ts FROM checks c
-            JOIN (SELECT component, MAX(ts) AS mts FROM checks GROUP BY component) m
-              ON c.component = m.component AND c.ts = m.mts`);
+        const plan = planOf(s, LATEST_CHECKS_SQL);
         expect(plan).toMatch(/idx_checks_component_ts/);
+        expect(plan).not.toMatch(/SCAN checks|SCAN c\b/);
+    });
+
+    it("returns the same latest rows as the old GROUP BY query", () => {
+        const s = migratedDb();
+        seed(s, NOW);
+        // A component whose newest row is older than everyone else's.
+        s.prepare(`INSERT INTO checks (component, ts, ok, state, latency_ms) VALUES ('mcp', ?, 0, 'down', 9)`).run(NOW - 3600);
+        const old = s.prepare(`
+            SELECT c.component, c.ts, c.state FROM checks c
+            JOIN (SELECT component, MAX(ts) AS mts FROM checks GROUP BY component) m
+              ON c.component = m.component AND c.ts = m.mts ORDER BY c.component`).all();
+        const next = (s.prepare(LATEST_CHECKS_SQL).all() as { component: string; ts: number; state: string }[])
+            .map(({ component, ts, state }) => ({ component, ts, state }))
+            .sort((a, b) => a.component.localeCompare(b.component));
+        expect(next).toEqual(old);
+        expect(next).toHaveLength(8);
+    });
+
+    it("returns nothing on an empty table", () => {
+        expect(migratedDb().prepare(LATEST_CHECKS_SQL).all()).toEqual([]);
     });
 
     it("still deletes exactly the rows past the retention window", () => {

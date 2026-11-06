@@ -134,6 +134,7 @@ header .sub { color: var(--muted); font-size: 13px; }
 .tabs button.active { background: var(--btn); color: var(--btn-fg); }
 .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.latnote { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .sw.up { background: var(--up); } .sw.warn { background: var(--warn); } .sw.down { background: var(--down); } .sw.none { background: var(--none); }
 

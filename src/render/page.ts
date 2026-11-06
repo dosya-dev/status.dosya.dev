@@ -193,6 +193,14 @@ function pillsHtml(p: ProductView): string {
   return `<div class="pills">${pills}</div>`;
 }
 
+/**
+ * The listing probes run from one monitoring location, often far from the
+ * probed workspace's region, so their round trip (about 1.4 s for the file
+ * listing) reads as slowness users do not see. Say so beside the numbers.
+ */
+export const LATENCY_NOTE =
+  "Response times are measured from our monitoring location, which can be far from your workspace's region. Use them to spot trends; the speed you see depends on where you are.";
+
 function renderProduct(p: ProductView): string {
   const bars = p.bars.map(barHtml).join("");
   const first = p.bars[0]?.day ?? "";
@@ -211,7 +219,7 @@ function renderProduct(p: ProductView): string {
           <div class="axis mono"><span>${esc(dayLabel(first))}</span><span>${esc(dayLabel(last))}</span></div>
         </div>
         <div class="c3"><div class="mono pct">${fmtPct(p.uptimePct)}</div><div class="cap">uptime</div></div>
-        <div class="c4">${sparkHtml(p.latencySeries, p.state)}<div><div class="mono ms">${ms}</div><div class="cap">${cap}</div></div></div>
+        <div class="c4" title="${LATENCY_NOTE}">${sparkHtml(p.latencySeries, p.state)}<div><div class="mono ms">${ms}</div><div class="cap">${cap}</div></div></div>
       </div>`;
 }
 
@@ -524,6 +532,7 @@ ${PREPAINT_SCRIPT}
     </div>
   </div>
   ${rangeViews}
+  <p class="latnote">${LATENCY_NOTE}</p>
   ${renderHistory(parts.history, view.nowUnix)}
   <footer>
     <div class="footlinks">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderPage } from "./page";
+import { renderPage, LATENCY_NOTE } from "./page";
 import type { StatusView } from "../snapshot";
 import {
   buildRangeSnapshot,
@@ -66,6 +66,13 @@ describe("renderPage: shell", () => {
     expect(html).toContain("60 min");
     expect(html).toContain("24 hours");
     expect(html).toContain("All systems operational");
+  });
+
+  it("says response times come from the monitor, not the reader's location", () => {
+    const html = renderPage(makeView());
+    expect(LATENCY_NOTE).toContain("monitoring location");
+    expect(html).toContain(`<p class="latnote">${LATENCY_NOTE}</p>`);
+    expect(html).toContain(`class="c4" title="${LATENCY_NOTE}"`);
   });
 
   it("includes theme + timezone toggles, RSS/fonts, and product/support links", () => {
